@@ -8,7 +8,7 @@ const request = require('request');
 const JSONbig = require('json-bigint');
 const async = require('async');
 const mqtt = require("mqtt");
-        
+
 
 const REST_PORT = (process.env.PORT || 5000);
 const APIAI_ACCESS_TOKEN = process.env.APIAI_ACCESS_TOKEN || 'e865f72c9d8b40a788359bc8a2534872';
@@ -30,8 +30,8 @@ class FacebookBot {
         this.messagesDelay = 200;
     }
 
-    
-    
+
+
 
     doDataResponse(sender, facebookResponseData) {
         console.log("================doDatasResponse==================");
@@ -342,52 +342,66 @@ class FacebookBot {
         }
     }
 
-    
+
     handleApiAiAction(sender, action, responseMessages, contexts, parameters) {
         switch (action) {
             case "personal-details-for-job-application":
                 let userContact = contexts[0].parameters['user-contact'];
-                if (userContact.length <=0)
+                if (userContact.length <= 0)
                     userContact = '';
                 console.log("User Contact is: ", userContact);
-                if(userContact==="11111"){
-                    var url = 'mqtt://m14.cloudmqtt.com:16129';
-                    var options = {
-                        clientId: 'mqttjs_' + Math.random().toString(16).substr(2, 8),
-                        username: 'user1',
-                        password: 'password'
-                    };
-                  
-                    var client = mqtt.connect(url, options);
-                    var myMessage = "LightOn";
-                    client.on('connect', function () {
-                        console.log("Connection is made successfully");
-                        client.publish('mytopic', myMessage);
-                        client.end();
-                        // client.subscribe('mytopic');
-                        
-                        // client.on("message", function (topic, payload) {
-                        //   console.log("message arrived");
-                        //   console.log([topic, payload].join(": "))
-                        //   client.end()
-                        // })
-                  
-                    });
-                }
+
                 this.doRichContentResponse(sender, responseMessages);
                 break;
             default:
                 //unhandled action, just send back the text
                 console.log("Entering handleApiAiAction...........");
                 //console.log("Action is: ", action);
-                console.log("=======RESPONSE TEXT======",responseMessages);
+                console.log("=======RESPONSE TEXT======", responseMessages);
                 this.doRichContentResponse(sender, responseMessages);
         }
     }
 
+    connectToMQTT(msg) {
+        var url = 'mqtt://m14.cloudmqtt.com:16129';
+
+        var options = {
+            clientId: 'mqttjs_' + Math.random().toString(16).substr(2, 8),
+            username: 'user1',
+            password: 'password'
+        };
+
+        var client;
+        if (client !== null || !client.toString().trim() ==="") {
+            client = mqtt.connect(url, options);
+        }
+        client.on('connect', function () {
+            console.log("Connection is made successfully");
+            if(msg==="on"){
+            client.publish('mytopic', "LightOn");
+            client.end();
+            }
+
+            if(msg==="off"){
+                client.publish('mytopic', "LightOff");
+                client.end();
+                }
+        });
+
+        if(client!==null || !client.toString().trim() ===""){
+            client.end();
+        }
+
+    }
     doApiAiRequest(apiaiRequest, sender) {
         apiaiRequest.on('response', (response) => {
             let responseText = response.result.fulfillment.speech;
+            if (responseText.indexOf("turned on") != -1) {
+                this.connectToMQTT("on")
+            }
+            if (responseText.indexOf("turned off") != -1) {
+                this.connectToMQTT("off")
+            }
             let responseData = response.result.fulfillment.data;
             let responseMessages = response.result.fulfillment.messages;
             console.log("ResponseText ", responseText);
