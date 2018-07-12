@@ -378,19 +378,27 @@ class FacebookBot {
         client.on('connect', function () {
             console.log("Connection is made successfully");
             if(msg==="on"){
+            console.log("Inside if condition ON");
             client.publish('mytopic', "LightOn");
+            console.log("xxxxxxxxxxxx");
             client.end();
             }
 
             if(msg==="off"){
+                console.log("Inside if condition OFF");
                 client.publish('mytopic', "LightOff");
+                console.log("yyyyyyyyyy");
                 client.end();
                 }
         });
 
+        console.log("11111111111");
+
         if(client!==null || !client.toString().trim() ===""){
+            console.log("2222222222222222222");
             client.end();
         }
+        console.log("333333333333333");
 
     }
     doApiAiRequest(apiaiRequest, sender) {
