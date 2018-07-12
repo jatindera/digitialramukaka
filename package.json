@@ -13,7 +13,6 @@
   },
   "author": "",
   "license": "ISC",
-  ,
   "dependencies": {
     "apiai": "^3.0.3",
     "async": "^2.0.0",
